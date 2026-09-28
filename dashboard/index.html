@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIGWATCH — Quantum Digital Signature Threat Detection Workbench</title>
+  <meta name="description" content="Quantum-inspired, non-ML cyber threat detection framework for teleportation-based Quantum Digital Signature (QDS) protocols." />
+
+  <!-- Academic / Scientific Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="academic-theme">
+
+  <!-- Clean Institutional Header -->
+  <header class="top-header">
+    <div class="header-content">
+      <div class="brand-group">
+        <h1 class="brand-name">SIGWATCH</h1>
+        <span class="brand-divider">/</span>
+        <span class="brand-sub">Quantum Digital Signature Threat Detection Workbench</span>
+      </div>
+      <div class="header-right-actions">
+        <button type="button" id="btn-open-payload-modal" class="btn-start-payload">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Start Payload
+        </button>
+        <div class="header-meta">
+          <span class="meta-item">Total Samples: <strong id="global-trial-count">0</strong></span>
+          <span class="meta-divider">&bull;</span>
+          <span class="meta-item">Alerts: <strong id="global-alert-count">0</strong></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Start Payload Parameter Configuration Modal Popup -->
+  <div class="modal-backdrop" id="payload-modal" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 class="modal-title">Configure &amp; Start Quantum Payload Batch</h2>
+          <p class="modal-subtitle">Inject quantum cyber threat vectors and configure statistical hypothesis bounds.</p>
+        </div>
+        <button type="button" class="btn-modal-close" id="btn-close-modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="payload-modal-form" onsubmit="return false;">
+          
+          <!-- Template Payloads Quick Selection -->
+          <div class="modal-section-title">1. Attack Template Payloads (Demonstration Presets)</div>
+          <div class="payload-template-grid" id="payload-template-grid">
+            
+            <!-- Template 1: Clean Baseline H0 -->
+            <div class="payload-template-card" data-template="clean">
+              <div class="template-card-header">
+                <span class="template-badge badge-clean">H₀ NULL</span>
+                <span class="template-tag">Baseline</span>
+              </div>
+              <div class="template-title">Clean Teleportation (H₀)</div>
+              <div class="template-desc">Pristine teleportation channel under physical noise baseline.</div>
+              <div class="template-meta-row">
+                <span class="meta-pill">N = 250</span>
+                <span class="meta-pill">p = 0.020</span>
+                <span class="meta-pill">η = 0.00</span>
+              </div>
+              <div class="template-sig-preview sig-clean">
+                <strong>Expected Output:</strong> S ≈ 2.828 &bull; Q̂ ≤ 2.0% &bull; 0 Alerts &bull; 100% Valid
+              </div>
+            </div>
+
+            <!-- Template 2: Intercept-Resend (IR) -->
+            <div class="payload-template-card" data-template="IR">
+              <div class="template-card-header">
+                <span class="template-badge badge-ir">IR ATTACK</span>
+                <span class="template-tag">Bell Collapse</span>
+              </div>
+              <div class="template-title">Intercept-Resend (IR)</div>
+              <div class="template-desc">Eve measures Bob's EPR qubit in random {Z, X} basis &amp; re-prepares fresh state.</div>
+              <div class="template-meta-row">
+                <span class="meta-pill">N = 280</span>
+                <span class="meta-pill">p = 0.020</span>
+                <span class="meta-pill">η = 0.85</span>
+              </div>
+              <div class="template-sig-preview sig-ir">
+                <strong>Expected Output:</strong> S &lt; 2.0 (plunges to ~1.45) &bull; Q̂ ≈ 22% &bull; CHSH + QBER Alert
+              </div>
+            </div>
+
+            <!-- Template 3: Entanglement Hijacking (EH) -->
+            <div class="payload-template-card" data-template="EH">
+              <div class="template-card-header">
+                <span class="template-badge badge-eh">EH ATTACK</span>
+                <span class="template-tag">Severed EPR</span>
+              </div>
+              <div class="template-title">Entanglement Hijacking (EH)</div>
+              <div class="template-desc">Eve substitutes Bob's Bell pair with independent random states (|0⟩ / |+⟩).</div>
+              <div class="template-meta-row">
+                <span class="meta-pill">N = 300</span>
+                <span class="meta-pill">p = 0.020</span>
+                <span class="meta-pill">η = 0.90</span>
+              </div>
+              <div class="template-sig-preview sig-eh">
+                <strong>Expected Output:</strong> S → 0 (~0.15) &bull; Q̂ ≈ 48% &bull; Catastrophic CHSH &amp; QBER Alert
+              </div>
+            </div>
+
+            <!-- Template 4: Pauli Forgery (PF) -->
+            <div class="payload-template-card active" data-template="PF">
+              <div class="template-card-header">
+                <span class="template-badge badge-pf">PF ATTACK</span>
+                <span class="template-tag">Payload Forgery</span>
+              </div>
+              <div class="template-title">Pauli Forgery (PF)</div>
+              <div class="template-desc">Eve injects Pauli X-gate into encrypted QOTP signature qubit in transit.</div>
+              <div class="template-meta-row">
+                <span class="meta-pill">N = 250</span>
+                <span class="meta-pill">p = 0.020</span>
+                <span class="meta-pill">η = 0.75</span>
+              </div>
+              <div class="template-sig-preview sig-pf">
+                <strong>Expected Output:</strong> S ≈ 2.828 (Untouched EPR) &bull; Q̂ ≈ 75% &bull; Pauli X-Syndrome Alert
+              </div>
+            </div>
+
+            <!-- Template 5: Correction Bit Manipulation (CBM) -->
+            <div class="payload-template-card" data-template="CBM">
+              <div class="template-card-header">
+                <span class="template-badge badge-cbm">CBM ATTACK</span>
+                <span class="template-tag">Feedforward Tamper</span>
+              </div>
+              <div class="template-title">Correction Bit Tamper (CBM)</div>
+              <div class="template-desc">Eve forces classical teleportation correction feedforward bits to (m₀, m₁) = (1, 1).</div>
+              <div class="template-meta-row">
+                <span class="meta-pill">N = 350</span>
+                <span class="meta-pill">p = 0.020</span>
+                <span class="meta-pill">η = 0.80</span>
+              </div>
+              <div class="template-sig-preview sig-cbm">
+                <strong>Expected Output:</strong> S ≈ 2.828 (Untouched) &bull; |11⟩ Distribution Skew &bull; Pearson χ² Alert
+              </div>
+            </div>
+
+            <!-- Template 6: Stealth Low-Intensity Probe -->
+            <div class="payload-template-card" data-template="stealth">
+              <div class="template-card-header">
+                <span class="template-badge badge-stealth">STEALTH</span>
+                <span class="template-tag">Boundary Test</span>
+              </div>
+              <div class="template-title">Stealth Intercept Probe</div>
+              <div class="template-desc">Low-intensity quantum eavesdropping (η = 0.20) testing hypothesis test sensitivity bounds.</div>
+              <div class="template-meta-row">
+                <span class="meta-pill">N = 400</span>
+                <span class="meta-pill">p = 0.020</span>
+                <span class="meta-pill">η = 0.20</span>
+              </div>
+              <div class="template-sig-preview sig-stealth">
+                <strong>Expected Output:</strong> S ≈ 2.45 (Sub-Tsirelson) &bull; Q̂ ≈ 6.5% &bull; Statistical Boundary Alert
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Dynamic Output Telemetry Explainer Banner -->
+          <div class="template-details-banner" id="template-details-banner">
+            <div class="banner-header">
+              <span class="banner-title" id="banner-template-title">Pauli Forgery (PF) — Expected Output Telemetry &amp; Physics</span>
+              <span class="banner-channel" id="banner-template-channel">Target: Signature Qubit Channel (Payload Only)</span>
+            </div>
+            <div class="banner-grid">
+              <div class="banner-item">
+                <span class="banner-label">CHSH S-Parameter:</span>
+                <strong id="banner-chsh-desc">S ≈ 2.828 (Tsirelson Intact — Channel Isolation Verified)</strong>
+              </div>
+              <div class="banner-item">
+                <span class="banner-label">Expected QBER (Q̂):</span>
+                <strong id="banner-qber-desc">~75.0% (Deterministic 1-to-1 Bit-Flip over QOTP)</strong>
+              </div>
+              <div class="banner-item">
+                <span class="banner-label">Primary Active Detector:</span>
+                <strong id="banner-detector-desc">Pauli Error Asymmetry (X-syndrome spike) + QBER Test</strong>
+              </div>
+              <div class="banner-item">
+                <span class="banner-label">Correction Distribution:</span>
+                <strong id="banner-corr-desc">Uniform (p = 0.25 on {00, 01, 10, 11})</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Primary Simulation Parameters -->
+          <div class="modal-section-title">2. Fine-Tune Quantum Attack &amp; Physical Parameters</div>
+          <div class="modal-grid-2col">
+            <div class="field-item">
+              <label for="modal-attack-type">Target Threat Vector</label>
+              <select id="modal-attack-type" class="form-select">
+                <option value="clean">Clean Traffic (Null Hypothesis H₀)</option>
+                <option value="IR">Intercept-Resend Attack (IR)</option>
+                <option value="EH">Entanglement Hijacking (EH)</option>
+                <option value="PF" selected>Pauli Forgery (PF)</option>
+                <option value="CBM">Correction Bit Manipulation (CBM)</option>
+              </select>
+            </div>
+
+            <div class="field-item">
+              <label for="modal-n-trials">Batch Sample Size (N)</label>
+              <input type="number" id="modal-n-trials" class="form-input" value="250" min="20" max="2000" step="10" />
+            </div>
+          </div>
+
+          <div class="modal-grid-2col">
+            <div class="field-item">
+              <div class="slider-title-line">
+                <label for="modal-slider-intensity">Attack Injection Intensity (η ∈ [0, 1])</label>
+                <span class="num-readout" id="modal-disp-intensity">0.70</span>
+              </div>
+              <input type="range" id="modal-slider-intensity" class="slider-academic" min="0.0" max="1.0" step="0.05" value="0.70" />
+            </div>
+
+            <div class="field-item">
+              <div class="slider-title-line">
+                <label for="modal-slider-noise">Physical Depolarizing Noise (p_noise)</label>
+                <span class="num-readout" id="modal-disp-noise">0.020</span>
+              </div>
+              <input type="range" id="modal-slider-noise" class="slider-academic" min="0.0" max="0.15" step="0.005" value="0.02" />
+            </div>
+          </div>
+
+          <!-- Hypothesis Test Critical Thresholds -->
+          <div class="modal-section-title">2. Hypothesis Test Critical Significance (α)</div>
+          <div class="modal-grid-2col">
+            <div class="field-item">
+              <div class="thresh-label-row">
+                <label for="modal-slider-qber-alpha">QBER Threshold Significance (α_QBER)</label>
+                <span class="num-readout-small" id="modal-val-qber-alpha">0.010</span>
+              </div>
+              <input type="range" id="modal-slider-qber-alpha" class="slider-academic" min="0.001" max="0.10" step="0.001" value="0.01" />
+            </div>
+
+            <div class="field-item">
+              <div class="thresh-label-row">
+                <label for="modal-slider-chsh-alpha">CHSH Threshold Significance (α_CHSH)</label>
+                <span class="num-readout-small" id="modal-val-chsh-alpha">0.010</span>
+              </div>
+              <input type="range" id="modal-slider-chsh-alpha" class="slider-academic" min="0.001" max="0.10" step="0.001" value="0.01" />
+            </div>
+
+            <div class="field-item">
+              <div class="thresh-label-row">
+                <label for="modal-slider-pauli-alpha">Pauli Syndrome Significance (α_Pauli)</label>
+                <span class="num-readout-small" id="modal-val-pauli-alpha">0.010</span>
+              </div>
+              <input type="range" id="modal-slider-pauli-alpha" class="slider-academic" min="0.001" max="0.10" step="0.001" value="0.01" />
+            </div>
+
+            <div class="field-item">
+              <div class="thresh-label-row">
+                <label for="modal-slider-corr-alpha">Correction Bit Significance (α_Corr)</label>
+                <span class="num-readout-small" id="modal-val-corr-alpha">0.010</span>
+              </div>
+              <input type="range" id="modal-slider-corr-alpha" class="slider-academic" min="0.001" max="0.10" step="0.001" value="0.01" />
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-modal-inject-clean" class="btn-sub">Inject Clean H₀</button>
+        <button type="button" id="btn-modal-cancel" class="btn-sub">Cancel</button>
+        <button type="button" id="btn-modal-execute" class="btn-main-large">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Launch Quantum Payload Batch
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <main class="workbench-body">
+
+    <!-- Top Row: Key Summary Metric Strip -->
+    <section class="summary-metric-section">
+      <div class="metric-strip-card">
+        <div class="metric-cell">
+          <div class="metric-label">Observed QBER (Q̂)</div>
+          <div class="metric-value" id="metric-qber">0.000%</div>
+          <div class="metric-sub" id="metric-qber-caption">H₀ Null Baseline: 2.000%</div>
+        </div>
+
+        <div class="metric-cell">
+          <div class="metric-label">CHSH S-Parameter</div>
+          <div class="metric-value" id="metric-chsh">2.828</div>
+          <div class="metric-sub" id="metric-chsh-caption">Tsirelson: 2√2 ≈ 2.828 | Bell Bound: 2.000</div>
+        </div>
+
+        <div class="metric-cell">
+          <div class="metric-label">Signature Verification</div>
+          <div class="metric-value" id="metric-verify-rate">100.0%</div>
+          <div class="metric-sub" id="metric-verify-caption">Accepted: 0 / 0 trials</div>
+        </div>
+
+        <div class="metric-cell">
+          <div class="metric-label">Active Anomaly Alerts</div>
+          <div class="metric-value" id="metric-alert-count">0</div>
+          <div class="metric-sub">False Alarm Target: α = 0.01</div>
+        </div>
+
+        <div class="metric-cell action-cell">
+          <button type="button" id="btn-quick-run" class="btn-main-wide">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Re-Run Last Payload
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Center Stage: Multi-Graph Tabbed Workspace with All Individual Trial Datapoints -->
+    <section class="graph-workspace-section">
+      <div class="graph-card">
+        
+        <!-- Graph Tabs Header -->
+        <div class="graph-tabs-header">
+          <div class="tabs-list">
+            <button class="graph-tab active" data-graph-tab="view-primary">
+              1. All-Trial Telemetry (QBER &amp; CHSH S Datapoints)
+            </button>
+            <button class="graph-tab" data-graph-tab="view-correlators">
+              2. Channel Correlators &amp; Pauli Syndromes
+            </button>
+            <button class="graph-tab" data-graph-tab="view-distributions">
+              3. Correction Bit Uniformity (χ² Test)
+            </button>
+            <button class="graph-tab" data-graph-tab="view-benchmark">
+              4. Benchmark Sweep &amp; Noise Physics
+            </button>
+            <button class="graph-tab" data-graph-tab="view-inspector">
+              5. Raw Quantum Trial Inspector
+            </button>
+            <button class="graph-tab" data-graph-tab="view-security">
+              6. Channel Security &amp; Mitigations
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab 1: Primary Telemetry Waveforms + All Individual Trial Datapoints -->
+        <div class="graph-tab-content active" id="view-primary">
+          <div class="dual-chart-grid">
+            <div class="chart-box">
+              <div class="chart-head">
+                <span class="chart-heading">Per-Trial QBER Outcomes &amp; Running Error Rate (All Datapoints)</span>
+              </div>
+              <div class="canvas-wrapper-large">
+                <canvas id="liveQberChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-box chsh-vivid-card">
+              <div class="chart-head chsh-chart-head">
+                <div class="chart-title-group">
+                  <span class="chart-heading">Quantum Security Score &amp; Threat Level — Live Per Trial</span>
+                </div>
+                <div class="chsh-telemetry-badge-row">
+                  <span id="chsh-live-status-pill" class="status-pill-quantum">Secure</span>
+                  <span id="chsh-live-s-readout" class="status-pill-metric">Score = 100</span>
+                </div>
+              </div>
+              <div class="canvas-wrapper-large">
+                <canvas id="liveSecurityChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Angle Correlators & Pauli Breakdown -->
+        <div class="graph-tab-content" id="view-correlators">
+          <div class="dual-chart-grid">
+            <div class="chart-box">
+              <div class="chart-head">
+                <span class="chart-heading">CHSH Angle Pair Correlators E(a_i, b_j)</span>
+                <span class="chart-subtext">Measurement Bases: A ∈ {0°, 45°}, B ∈ {22.5°, 67.5°}</span>
+              </div>
+              <div class="canvas-wrapper-large">
+                <canvas id="angleCorrelatorChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div class="chart-head">
+                <span class="chart-heading">Payload Pauli Error Syndrome Breakdown</span>
+                <span class="chart-subtext">Signature Qubit Channel Isolation Check</span>
+              </div>
+              <div class="canvas-wrapper-large">
+                <canvas id="pauliSyndromeChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Correction Bit Uniformity -->
+        <div class="graph-tab-content" id="view-distributions">
+          <div class="single-chart-grid">
+            <div class="chart-box">
+              <div class="chart-head">
+                <span class="chart-heading">Teleportation Correction-Bit Distribution (m0, m1) &bull; Pearson χ² Uniformity Test</span>
+                <span class="chart-subtext">Under Null Hypothesis H₀, each outcome {00, 01, 10, 11} occurs with exact probability p = 0.25</span>
+              </div>
+              <div class="canvas-wrapper-large">
+                <canvas id="correctionDistChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Benchmark Sweep & Noise Physics -->
+        <div class="graph-tab-content" id="view-benchmark">
+          <div class="dual-chart-grid">
+            <div class="chart-box">
+              <div class="chart-head">
+                <span class="chart-heading">Detection Probability P_D(η) vs Attack Intensity</span>
+                <button type="button" id="btn-refresh-benchmark" class="btn-text">Reload Benchmark Data</button>
+              </div>
+              <div class="canvas-wrapper-large">
+                <canvas id="benchmarkIntensityChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div class="chart-head">
+                <span class="chart-heading">Noise Degradation Physics: QBER Q(p) &amp; CHSH S(p)</span>
+                <span class="chart-subtext">Analytical Bound: Q(p) = 2p/3, S(p) = 2√2(1 - 4p/3)</span>
+              </div>
+              <div class="canvas-wrapper-large">
+                <canvas id="noiseDegradationChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 5: Raw Quantum Trial Inspector -->
+        <div class="graph-tab-content" id="view-inspector">
+          <div class="inspector-box">
+            <div class="inspector-head">
+              <span class="chart-heading">Latest Simulation Raw Telemetry (Per-Trial Verification)</span>
+              <div class="filter-wrap">
+                <label for="filter-error-only">Filter: </label>
+                <select id="filter-error-only" class="form-select select-sm">
+                  <option value="all">All Quantum Trials</option>
+                  <option value="errors">Bit Errors Only</option>
+                  <option value="valid">Valid Signatures Only</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-container-scroll">
+              <table class="academic-data-table" id="raw-trials-table">
+                <thead>
+                  <tr>
+                    <th>Trial ID</th>
+                    <th>Message Bit (m)</th>
+                    <th>Bob Decoded</th>
+                    <th>Status</th>
+                    <th>QOTP Key (a, b)</th>
+                    <th>Correction (m0, m1)</th>
+                    <th>CHSH Angles (θ_A, θ_B)</th>
+                    <th>CHSH Signs (s_A, s_B)</th>
+                    <th>Pauli Syndrome</th>
+                  </tr>
+                </thead>
+                <tbody id="raw-trials-tbody">
+                  <tr>
+                    <td colspan="9" class="text-center">Run a simulation batch to inspect raw trial telemetry.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 6: Channel Security & Defensive Mitigations -->
+        <div class="graph-tab-content" id="view-security">
+          <div class="cs-tab-workspace">
+            
+            <!-- Channel Security Toggles Card -->
+            <div class="cs-panel-card">
+              <div class="cs-panel-header">
+                <div class="cs-header-left">
+                  <span class="cs-shield-icon">&#9673;</span>
+                  <div>
+                    <div class="cs-panel-title">Channel Security Mitigations</div>
+                    <div class="cs-panel-sub">Active defense layers &mdash; toggle parameters live against identical quantum attack batches</div>
+                  </div>
+                </div>
+                <button type="button" id="btn-run-comparison" class="btn-cs-compare">
+                  <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3L5 7l4 4-1.5 1.5L2 7l5.5-5.5L9 3zm6 0l1.5 1.5L11 10l1.5 1.5L17 7l-5.5-5.5L13 0 9 3zm-3 18l-4-4 1.5-1.5L9 17l-1.5-1.5L12 21zm3 0l5.5-5.5L13 12l4-4-1.5-1.5L10 12l5.5 5.5L13 21z"/></svg>
+                  Run Comparison
+                </button>
+              </div>
+
+              <div class="cs-toggles-grid">
+
+                <!-- Toggle 1: Multi-Copy Distribution -->
+                <div class="cs-toggle-card" id="cs-card-multicopy">
+                  <div class="cs-toggle-top">
+                    <div class="cs-toggle-info">
+                      <div class="cs-toggle-name">Multi-Copy Distribution</div>
+                      <div class="cs-toggle-desc">Require N independent signature copies &mdash; forgery must fool all N simultaneously</div>
+                    </div>
+                    <div class="cs-n-readout">
+                      <span class="cs-n-label">N =</span>
+                      <span class="cs-n-value" id="cs-n-display">8</span>
+                    </div>
+                  </div>
+                  <div class="cs-slider-row">
+                    <span class="cs-slider-bound">1</span>
+                    <input type="range" id="cs-slider-n" class="cs-slider" min="1" max="64" step="1" value="8" />
+                    <span class="cs-slider-bound">64</span>
+                  </div>
+                  <div class="cs-forge-prob-row">
+                    <span class="cs-forge-label">Forge Probability:</span>
+                    <span class="cs-forge-pill" id="cs-forge-prob">(1/4)<sup>8</sup> &asymp; 1.53 &times; 10<sup>&minus;5</sup></span>
+                  </div>
+                </div>
+
+                <!-- Toggle 2: Nonce / Timestamp Binding -->
+                <div class="cs-toggle-card" id="cs-card-nonce">
+                  <div class="cs-toggle-top">
+                    <div class="cs-toggle-info">
+                      <div class="cs-toggle-name">Nonce / Timestamp Binding</div>
+                      <div class="cs-toggle-desc">Reject correction-bit pairs already seen this session &mdash; blocks replay attacks</div>
+                    </div>
+                    <label class="cs-switch" for="cs-toggle-nonce">
+                      <input type="checkbox" id="cs-toggle-nonce" role="switch" />
+                      <span class="cs-slider-pill"></span>
+                    </label>
+                  </div>
+                  <div class="cs-badge-row">
+                    <span class="cs-badge cs-badge-off" id="cs-nonce-status">OFF &mdash; Replayed bits flow to detector</span>
+                  </div>
+                </div>
+
+                <!-- Toggle 3: Dual Thresholding -->
+                <div class="cs-toggle-card" id="cs-card-dual">
+                  <div class="cs-toggle-top">
+                    <div class="cs-toggle-info">
+                      <div class="cs-toggle-name">Dual Thresholding</div>
+                      <div class="cs-toggle-desc">Accept only when NEITHER QBER alert NOR Pauli alert fires (vs QBER-only)</div>
+                    </div>
+                    <label class="cs-switch" for="cs-toggle-dual">
+                      <input type="checkbox" id="cs-toggle-dual" role="switch" />
+                      <span class="cs-slider-pill"></span>
+                    </label>
+                  </div>
+                  <div class="cs-badge-row">
+                    <span class="cs-badge cs-badge-off" id="cs-dual-status">OFF &mdash; Single QBER gate</span>
+                  </div>
+                </div>
+
+                <!-- Toggle 4: CHSH-Gated Signing -->
+                <div class="cs-toggle-card" id="cs-card-chsh">
+                  <div class="cs-toggle-top">
+                    <div class="cs-toggle-info">
+                      <div class="cs-toggle-name">CHSH-Gated Signing</div>
+                      <div class="cs-toggle-desc">Block all signings when session S &lt; 2.0 (classical Bell bound violated)</div>
+                    </div>
+                    <label class="cs-switch" for="cs-toggle-chsh">
+                      <input type="checkbox" id="cs-toggle-chsh" role="switch" />
+                      <span class="cs-slider-pill"></span>
+                    </label>
+                  </div>
+                  <div class="cs-badge-row">
+                    <span class="cs-badge cs-badge-off" id="cs-chsh-status">OFF &mdash; Signing proceeds regardless of S</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Compare to Unprotected Panel -->
+            <div class="compare-panel-card">
+              <div class="compare-panel-header">
+                <div class="compare-title">Compare to Unprotected</div>
+                <div class="compare-subtitle" id="compare-run-label">Same attack batch (same seed) &mdash; differing only in active Channel Security toggles</div>
+              </div>
+
+              <div class="compare-cards-row">
+
+                <!-- Unprotected Card -->
+                <div class="compare-result-card compare-unprotected" id="compare-card-unprotected">
+                  <div class="compare-card-header">
+                    <span class="compare-card-icon compare-icon-danger">&#9888;</span>
+                    <span class="compare-card-title">Unprotected Baseline</span>
+                    <span class="compare-card-tag">N = 1 &bull; All toggles OFF</span>
+                  </div>
+                  <div class="compare-metric primary-metric">
+                    <div class="compare-metric-label">Forgeries Accepted (Harm)</div>
+                    <div class="compare-metric-value danger-val" id="u-accepted-forgeries">&mdash;</div>
+                    <div class="compare-metric-sub" id="u-accepted-sub">Awaiting comparison run</div>
+                  </div>
+                  <div class="compare-metrics-row">
+                    <div class="compare-mini-metric">
+                      <div class="mini-label">Forge Probability</div>
+                      <div class="mini-value" id="u-forge-prob">&mdash;</div>
+                    </div>
+                    <div class="compare-mini-metric">
+                      <div class="mini-label">Alerts Raised</div>
+                      <div class="mini-value" id="u-alerts">&mdash;</div>
+                    </div>
+                    <div class="compare-mini-metric">
+                      <div class="mini-label">Session S</div>
+                      <div class="mini-value" id="u-chsh-s">&mdash;</div>
+                    </div>
+                    <div class="compare-mini-metric">
+                      <div class="mini-label">Error Trials</div>
+                      <div class="mini-value" id="u-n-errors">&mdash;</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Protected Card -->
+                <div class="compare-result-card compare-protected" id="compare-card-protected">
+                  <div class="compare-card-header">
+                    <span class="compare-card-icon compare-icon-safe">&#10003;</span>
+                    <span class="compare-card-title">Protected Mitigations</span>
+                    <span class="compare-card-tag" id="compare-prot-tag">Active toggle settings</span>
+                  </div>
+                  <div class="compare-metric primary-metric">
+                    <div class="compare-metric-label">Forgeries Accepted (Harm)</div>
+                    <div class="compare-metric-value safe-val" id="p-accepted-forgeries">&mdash;</div>
+                    <div class="compare-metric-sub" id="p-accepted-sub">Awaiting comparison run</div>
+                  </div>
+                  <div class="compare-metrics-row">
+                    <div class="compare-mini-metric">
+                      <div class="mini-label">Forge Probability</div>
+                      <div class="mini-value" id="p-forge-prob">&mdash;</div>
+                    </div>
+                    <div class="compare-mini-metric">
+                      <div class="mini-label">Alerts Raised</div>
+                      <div class="mini-value" id="p-alerts">&mdash;</div>
+                    </div>
+                    <div class="compare-mini-metric">
+                      <div class="mini-label">Session S</div>
+                      <div class="mini-value" id="p-chsh-s">&mdash;</div>
+                    </div>
+                    <div class="compare-mini-metric">
+                      <div class="mini-label">Blocked by CHSH</div>
+                      <div class="mini-value" id="p-chsh-blocked">&mdash;</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Status / log line -->
+              <div class="compare-log-row" id="compare-log-row">
+                <span class="compare-log-idle">&#9711; Ready &mdash; configure toggles above and click Run Comparison</span>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Bottom Section: Real-Time Anomaly Alert Log -->
+    <section class="alerts-section">
+      <div class="card alert-log-card">
+        <div class="card-header-compact">
+          <span class="section-label">REAL-TIME STATISTICAL ANOMALY &amp; ATTACK DETECTION LOG</span>
+        </div>
+        <div class="alert-log-scroll" id="live-alert-container">
+          <div class="empty-log-state">
+            <span class="empty-symbol">&bull;</span>
+            <span>No anomalous deviation detected. Quantum channel observables conform to null distribution H₀.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bottom-footer">
+    <div class="footer-inner">
+      <span><strong>SIGWATCH</strong> &mdash; Quantum Digital Signature Threat Detection Framework</span>
+      <span>Pure State-Vector Physics &bull; Live Telemetry Workbench</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
