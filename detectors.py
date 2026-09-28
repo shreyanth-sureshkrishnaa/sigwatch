@@ -558,15 +558,20 @@ def summarize(logs: List[TrialLog], config: DetectorConfig) -> Dict[str, Any]:
     if not logs:
         return {}
     n = len(logs)
-    qber = sum(l.is_error for l in logs) / n
+    n_errors = sum(l.is_error for l in logs)
+    qber = n_errors / n
     chsh_samples = [(l.chsh_alice_angle, l.chsh_bob_angle,
                      l.chsh_alice_sign,  l.chsh_bob_sign) for l in logs]
     S, chsh_info = compute_chsh_S(chsh_samples)
     alerts = run_all_detectors(logs, config)
     return {
         "n_trials": n,
+        "n_errors": n_errors,
         "qber": round(qber, 5),
+        "qber_null": round(config.qber_null, 5),
+        "noise_level": round(logs[0].noise_level, 4),
         "chsh_S": round(S, 5),
+        "chsh_samples": len(chsh_samples),
         "chsh_info": chsh_info,
         "n_alerts": len(alerts),
         "alerts": [vars(a) for a in alerts],

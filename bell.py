@@ -261,6 +261,17 @@ def compute_chsh_S(
     e21 = E(a2, b1)
     e22 = E(a2, b2)
     S = abs(e11 - e12 + e21 + e22)
+
+    # Sanity-check / clamp against theoretical Tsirelson bound (2√2 ≈ 2.8284)
+    if S > 2.8285:
+        import warnings
+        warnings.warn(
+            f"Computed CHSH S={S:.4f} exceeded Tsirelson bound (2√2 ≈ {S_THEORY:.4f}); clamping to theoretical max.",
+            UserWarning,
+            stacklevel=2,
+        )
+    S = min(S, S_THEORY)
+
     info = {
         "E(a1,b1)": e11, "E(a1,b2)": e12,
         "E(a2,b1)": e21, "E(a2,b2)": e22,

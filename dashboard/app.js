@@ -804,20 +804,29 @@ let activeTrialAnimationTimer = null;
 // Process & Render Batch Telemetry with Sequential Calculation Animation
 // ---------------------------------------------------------------------------
 function renderBatchData(data) {
-  const summ = data.batch_summary;
+  const summ = data.batch_summary || {};
   const alerts = data.alerts || [];
   const trials = data.trials || [];
 
   state.latestTrials = trials;
 
+  const nTrials = (summ.n_trials !== undefined && !isNaN(summ.n_trials)) ? Number(summ.n_trials) : trials.length;
+  const nErrors = (summ.n_errors !== undefined && !isNaN(summ.n_errors)) ? Number(summ.n_errors) : (summ.qber !== undefined ? Math.round(summ.qber * nTrials) : trials.filter(t => t.is_error).length);
+  const nAccepted = nTrials - nErrors;
+  const chshSamples = (summ.chsh_samples !== undefined && !isNaN(summ.chsh_samples)) ? Number(summ.chsh_samples) : trials.length;
+  const qberNull = (summ.qber_null !== undefined && !isNaN(summ.qber_null)) ? Number(summ.qber_null) : 0.02;
+  const noiseLevel = (summ.noise_level !== undefined && !isNaN(summ.noise_level)) ? Number(summ.noise_level) : 0.02;
+
   // Update static summary captions
   const runTag = document.getElementById("last-run-tag");
   if (runTag) {
-    runTag.textContent = `${summ.attack_type} (η = ${summ.intensity.toFixed(2)})`;
+    const atk = summ.attack_type || "clean";
+    const inten = (summ.intensity !== undefined) ? summ.intensity.toFixed(2) : "0.00";
+    runTag.textContent = `${atk} (η = ${inten})`;
   }
-  document.getElementById("metric-qber-caption").textContent = `H₀ Null Baseline: ${(summ.qber_null * 100).toFixed(2)}% | Noise: ${(summ.noise_level * 100).toFixed(1)}%`;
-  document.getElementById("metric-chsh-caption").textContent = `Samples: ${summ.chsh_samples} | Theory: 2.828 | Bell Bound: 2.000`;
-  document.getElementById("metric-verify-caption").textContent = `Accepted: ${summ.n_trials - summ.n_errors} / ${summ.n_trials} trials`;
+  document.getElementById("metric-qber-caption").textContent = `H₀ Null Baseline: ${(qberNull * 100).toFixed(2)}% | Noise: ${(noiseLevel * 100).toFixed(1)}%`;
+  document.getElementById("metric-chsh-caption").textContent = `Samples: ${chshSamples} | Theory: 2.828 | Bell Bound: 2.000`;
+  document.getElementById("metric-verify-caption").textContent = `Accepted: ${nAccepted} / ${nTrials} trials`;
   document.getElementById("metric-alert-count").textContent = alerts.length;
 
   // Animate trial results calculation point-by-point onto graphs
@@ -866,11 +875,12 @@ function plotIndividualTrialDatapointsAnimated(trials, summ, alerts) {
   const dangerThreshLine = [];    // ds[3] — amber dashed at 50
 
   // Keep CHSH accumulators for the KPI metric card (metric-chsh) only
+  // Alice angles: 0°, 90°; Bob angles: 45°, 135°
   const anglePairs = {
-    "0,22.5": { sum: 0, count: 0 },
-    "0,67.5": { sum: 0, count: 0 },
-    "45,22.5": { sum: 0, count: 0 },
-    "45,67.5": { sum: 0, count: 0 },
+    "0,45.0": { sum: 0, count: 0 },
+    "0,135.0": { sum: 0, count: 0 },
+    "90,45.0": { sum: 0, count: 0 },
+    "90,135.0": { sum: 0, count: 0 },
   };
 
   let cumErrors = 0;
@@ -889,13 +899,20 @@ function plotIndividualTrialDatapointsAnimated(trials, summ, alerts) {
       document.getElementById("global-alert-count").textContent = state.totalAlerts.toLocaleString();
 
       // Finalize metrics with exact summary values
-      document.getElementById("metric-qber").textContent = `${(summ.qber * 100).toFixed(2)}%`;
-      document.getElementById("metric-chsh").textContent = summ.chsh_S.toFixed(3);
-      document.getElementById("metric-verify-rate").textContent = `${((1 - summ.qber) * 100).toFixed(1)}%`;
+      const finalQber = (summ.qber !== undefined) ? summ.qber : (cumErrors / totalN);
+      const finalS = (summ.chsh_S !== undefined) ? Math.min(summ.chsh_S, 2.8284) : 2.828;
+      const nTrials = (summ.n_trials !== undefined) ? summ.n_trials : totalN;
+      const nErrors = (summ.n_errors !== undefined) ? summ.n_errors : cumErrors;
+      const nAccepted = nTrials - nErrors;
+
+      document.getElementById("metric-qber").textContent = `${(finalQber * 100).toFixed(2)}%`;
+      document.getElementById("metric-chsh").textContent = finalS.toFixed(3);
+      document.getElementById("metric-verify-rate").textContent = `${((1 - finalQber) * 100).toFixed(1)}%`;
+      document.getElementById("metric-verify-caption").textContent = `Accepted: ${nAccepted} / ${nTrials} trials`;
 
       // Update Security Score badge at finalization
       const finalScore = Math.max(0, Math.min(100,
-        100 * (Math.min(summ.chsh_S, 2.8284) / 2.8284) * (1 - summ.qber)
+        100 * (Math.min(finalS, 2.8284) / 2.8284) * (1 - finalQber)
       ));
       const pillEl = document.getElementById("chsh-live-status-pill");
       const sReadoutEl = document.getElementById("chsh-live-s-readout");
@@ -930,7 +947,8 @@ function plotIndividualTrialDatapointsAnimated(trials, summ, alerts) {
     const currentQber = cumErrors / trialIdx;
     runningQber.push(currentQber);
     trialScatterQber.push({ x: trialIdx, y: t.is_error ? 1 : 0 });
-    qberNullLine.push(summ.qber_null);
+    const qberNullVal = (summ.qber_null !== undefined) ? summ.qber_null : 0.02;
+    qberNullLine.push(qberNullVal);
 
     // ── CHSH S-parameter (for KPI card only) ──────────────────────────────
     const prod = t.chsh_a_sign * t.chsh_b_sign;
@@ -941,11 +959,15 @@ function plotIndividualTrialDatapointsAnimated(trials, summ, alerts) {
       anglePairs[angleKey].sum += prod;
       anglePairs[angleKey].count++;
     }
-    const e11 = anglePairs["0,22.5"].count > 0 ? anglePairs["0,22.5"].sum / anglePairs["0,22.5"].count : 0.707;
-    const e12 = anglePairs["0,67.5"].count > 0 ? anglePairs["0,67.5"].sum / anglePairs["0,67.5"].count : -0.707;
-    const e21 = anglePairs["45,22.5"].count > 0 ? anglePairs["45,22.5"].sum / anglePairs["45,22.5"].count : 0.707;
-    const e22 = anglePairs["45,67.5"].count > 0 ? anglePairs["45,67.5"].sum / anglePairs["45,67.5"].count : 0.707;
-    const currentS = Math.abs(e11 - e12 + e21 + e22);
+    const e11 = anglePairs["0,45.0"] && anglePairs["0,45.0"].count > 0 ? anglePairs["0,45.0"].sum / anglePairs["0,45.0"].count : (1 / Math.SQRT2);
+    const e12 = anglePairs["0,135.0"] && anglePairs["0,135.0"].count > 0 ? anglePairs["0,135.0"].sum / anglePairs["0,135.0"].count : (-1 / Math.SQRT2);
+    const e21 = anglePairs["90,45.0"] && anglePairs["90,45.0"].count > 0 ? anglePairs["90,45.0"].sum / anglePairs["90,45.0"].count : (1 / Math.SQRT2);
+    const e22 = anglePairs["90,135.0"] && anglePairs["90,135.0"].count > 0 ? anglePairs["90,135.0"].sum / anglePairs["90,135.0"].count : (1 / Math.SQRT2);
+    const rawS = Math.abs(e11 - e12 + e21 + e22);
+    if (rawS > 2.8285) {
+      console.warn(`[CHSH] Computed S=${rawS.toFixed(4)} exceeded Tsirelson bound (2√2 ≈ 2.8284); clamping.`);
+    }
+    const currentS = Math.min(rawS, 2.828427);
 
     // ── Quantum Security Score ─────────────────────────────────────────────
     // Score = 100 × (S / 2.8284) × (1 − QBER), clamped [0, 100]
@@ -982,6 +1004,7 @@ function plotIndividualTrialDatapointsAnimated(trials, summ, alerts) {
     document.getElementById("metric-qber").textContent = `${(currentQber * 100).toFixed(2)}%`;
     document.getElementById("metric-chsh").textContent = currentS.toFixed(3);
     document.getElementById("metric-verify-rate").textContent = `${((1 - currentQber) * 100).toFixed(1)}%`;
+    document.getElementById("metric-verify-caption").textContent = `Accepted: ${trialIdx - cumErrors} / ${trialIdx} trials`;
 
     // ── Update security score badge ───────────────────────────────────────
     const pillEl = document.getElementById("chsh-live-status-pill");
@@ -1020,10 +1043,10 @@ function updatePhysicalDistributions(trials) {
   let pauliCounts = { I: 0, X: 0, Y: 0, Z: 0 };
 
   const anglePairs = {
-    "0,22.5": { sum: 0, count: 0 },
-    "0,67.5": { sum: 0, count: 0 },
-    "45,22.5": { sum: 0, count: 0 },
-    "45,67.5": { sum: 0, count: 0 },
+    "0,45.0": { sum: 0, count: 0 },
+    "0,135.0": { sum: 0, count: 0 },
+    "90,45.0": { sum: 0, count: 0 },
+    "90,135.0": { sum: 0, count: 0 },
   };
 
   trials.forEach((t) => {
@@ -1063,10 +1086,10 @@ function updatePhysicalDistributions(trials) {
   charts.pauliSyndrome.update();
 
   // Update Angle Correlators Chart
-  const e11 = anglePairs["0,22.5"].count > 0 ? anglePairs["0,22.5"].sum / anglePairs["0,22.5"].count : 0.707;
-  const e12 = anglePairs["0,67.5"].count > 0 ? anglePairs["0,67.5"].sum / anglePairs["0,67.5"].count : -0.707;
-  const e21 = anglePairs["45,22.5"].count > 0 ? anglePairs["45,22.5"].sum / anglePairs["45,22.5"].count : 0.707;
-  const e22 = anglePairs["45,67.5"].count > 0 ? anglePairs["45,67.5"].sum / anglePairs["45,67.5"].count : 0.707;
+  const e11 = anglePairs["0,45.0"].count > 0 ? anglePairs["0,45.0"].sum / anglePairs["0,45.0"].count : (1 / Math.SQRT2);
+  const e12 = anglePairs["0,135.0"].count > 0 ? anglePairs["0,135.0"].sum / anglePairs["0,135.0"].count : (-1 / Math.SQRT2);
+  const e21 = anglePairs["90,45.0"].count > 0 ? anglePairs["90,45.0"].sum / anglePairs["90,45.0"].count : (1 / Math.SQRT2);
+  const e22 = anglePairs["90,135.0"].count > 0 ? anglePairs["90,135.0"].sum / anglePairs["90,135.0"].count : (1 / Math.SQRT2);
 
   charts.angleCorrelator.data.datasets[0].data = [e11, e12, e21, e22];
   charts.angleCorrelator.update();
